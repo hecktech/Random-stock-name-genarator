@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Rookie Traders</title>
+  <style>
+    body {
+      background-color: #1f2b3e;
+      color: white;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    header {
+      font-size: 2.5em;
+      color: #00bfff;
+      margin-bottom: 30px;
+      background-color: #1f2937;
+    }
+
+    .container {
+      margin: 50px auto;
+      max-width: 600px;
+      border: 2px solid #00bfff;
+      border-radius: 10px;
+      padding: 20px;
+      background-color: #161b22;
+    }
+
+    .stock-display {
+      font-size: 2em;
+      margin: 20px 0;
+      font-weight: bold;
+      padding: 20px;
+      border-radius: 10px;
+      background: #1f2937; /* Darker background for stock name */
+    }
+
+    .action-display {
+      font-size: 1.5em;
+      margin: 20px 0;
+      padding: 10px;
+      border-radius: 5px;
+      color: white;
+      display: inline-block;
+    }
+
+    .buy {
+      background-color: #4caf50; /* Green for Buy */
+    }
+
+    .sell {
+      background-color: #f44336; /* Red for Sell */
+    }
+
+    .candlestick-chart {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+      gap: 2px;
+    }
+
+    .candlestick {
+      width: 20px;
+      display: inline-block;
+      position: relative;
+    }
+
+    .candle-body {
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      border-radius: 3px;
+    }
+
+    /* Color classes for candlestick */
+    .bullish {
+      background-color: #4caf50; /* Green for bullish candles */
+    }
+
+    .bearish {
+      background-color: #f44336; /* Red for bearish candles */
+    }
+
+    button {
+      background-color: #00bfff;
+      color: white;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 40px; /* Increased margin-top to move the button lower */
+    }
+
+    button:hover {
+      background-color: #0077aa;
+    }
+
+    .disclaimer {
+      font-size: 0.8em;
+      color: #888;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <header> The Rookie Traders</header>
+
+  <div class="container">
+    <h2>Random Nifty F&O Stock Generator</h2>
+
+    <div class="stock-display" id="stockDisplay">Click "Generate Stock"</div>
+    
+    <div class="action-display" id="actionDisplay"></div>
+
+    <button id="generateButton">Generate Stock</button>
+
+    <div class="candlestick-chart" id="candlestickChart"></div>
+
+    <div class="disclaimer">
+      <p><strong>Disclaimer:</strong> This is a random stock generator. The results are entirely random and should not be considered financial advice. Rookie Traders is not responsible for any profit or loss resulting from the use of this tool.</p>
+    </div>
+  </div>
+
+  <audio id="rollingSound" src="./videoplayback.mp3"></audio>
+
+  <script>
+    const stocks = [
+      "ACC", "ADANI ENTERPRISES", "ADANI PORTS", "AMBUJA CEMENTS", "APOLLO HOSPITALS",
+    "ASHOK LEYLAND", "ASIAN PAINTS", "AU SMALL FINANCE BANK", "AXIS BANK", "BAJAJ AUTO",
+    "BAJAJ FINSERV", "BAJAJ FINANCE", "BANDHAN BANK", "BANK OF BARODA", "BERGER PAINTS",
+    "BHARAT FORGE", "BHARTI AIRTEL", "BHEL", "BIOCON", "BOSCH", "BPCL", "BRITANNIA",
+    "CAN FIN HOMES", "CANARA BANK", "CHOLAMANDALAM INVESTMENT", "CIPLA", "COAL INDIA",
+    "COFORGE", "CONCOR", "CROMPTON", "CUMMINS INDIA", "DABUR", "DEEPAK NITRITE", 
+    "DIVI'S LABORATORIES", "DLF", "DR. REDDY'S LABORATORIES", "EICHER MOTORS", "ESCORTS KUBOTA", 
+    "EXIDE INDUSTRIES", "FEDERAL BANK", "GAIL", "GLENMARK PHARMA", "GODREJ CONSUMER PRODUCTS", 
+    "GRANULES INDIA", "GRASIM INDUSTRIES", "GUJARAT GAS", "HAL", "HAVELLS INDIA", 
+    "HCL TECHNOLOGIES", "HDFC", "HDFC AMC", "HDFC BANK", "HDFC LIFE", "HEROMOTOCO", 
+    "HINDALCO", "HINDUSTAN COPPER", "HINDUSTAN PETROLEUM", "HINDUSTAN UNILEVER", 
+    "ICICI BANK", "ICICI LOMBARD", "ICICI PRUDENTIAL", "IDFC FIRST BANK", "IDEA", 
+    "INDIABULLS HOUSING FINANCE", "INDIAMART", "INDIAN BANK", "INDIAN HOTELS", 
+    "INDIGO", "INDUSIND BANK", "INFOSYS", "IRCTC", "ITC", "JINDAL STEEL", "JSW STEEL", 
+    "JUBLANT FOODWORKS", "KOTAK MAHINDRA BANK", "L&T", "L&T FINANCE", "LIC HOUSING", 
+    "LTIMINDTREE", "LUPIN", "M&M FINANCIAL", "M&M", "MANAPPURAM FINANCE", 
+    "MARICO", "MARUTI SUZUKI", "MINDTREE", "MUTHOOT FINANCE", "NAUKRI", 
+    "NBCC", "NESTLE INDIA", "NMDC", "NTPC", "ONGC", "PAGE INDUSTRIES", 
+    "PETRONET LNG", "PFC", "PIDILITE INDUSTRIES", "PI INDUSTRIES", "PNB", 
+    "POLYCAB INDIA", "POWER GRID", "PVR", "RBL BANK", "RELIANCE", "SAIL", 
+    "SBICARD", "SBILIFE", "SBI", "SHREE CEMENT", "SIEMENS", "SRF", "SUN PHARMA", 
+    "SUN TV", "TATA CHEMICALS", "TATA CONSUMER PRODUCTS", "TATA ELXSI", "TATA MOTORS", 
+    "TATA POWER", "TATA STEEL", "TECH MAHINDRA", "TITAN", "TORRENT PHARMA", 
+    "TORRENT POWER", "TRENT", "TVS MOTOR", "ULTRATECH CEMENT", "UPL", 
+    "VEDANTA", "VOLTAS", "WHIRLPOOL", "WIPRO", "ZEEL"
+    ];
+
+    const generateButton = document.getElementById("generateButton");
+    const stockDisplay = document.getElementById("stockDisplay");
+    const actionDisplay = document.getElementById("actionDisplay");
+    const candlestickChart = document.getElementById("candlestickChart");
+    const rollingSound = document.getElementById("rollingSound");
+
+    function getRandomStock() {
+      return stocks[Math.floor(Math.random() * stocks.length)];
+    }
+
+    function getRandomAction() {
+      return Math.random() > 0.5 ? "Buy" : "Sell";
+    }
+
+    function startRolling() {
+      rollingSound.play(); // Play sound
+
+      let rollingCount = 0;
+      const rollingDuration = 10000; // 10 seconds
+      const maxInterval = 100; // Initial interval in milliseconds
+      const minInterval = 500; // Final interval in milliseconds
+      const interval = 100;
+      const totalRolls = rollingDuration / interval;
+      const rollingInterval = setInterval(() => {
+        stockDisplay.innerText = getRandomStock();
+        actionDisplay.innerText = getRandomAction();
+        actionDisplay.className = `action-display ${actionDisplay.innerText.toLowerCase()}`;
+        rollingCount++;
+
+        const progress = rollingCount / totalRolls;
+        const currentInterval = Math.max(maxInterval + (minInterval - maxInterval) * progress, minInterval);
+        
+        if (rollingCount >= totalRolls) { // Stop rolling after 10 seconds
+          clearInterval(rollingInterval);
+          rollingSound.pause();
+          rollingSound.currentTime = 0; // Reset sound
+        }
+      }, interval);
+    }
+
+    function generateCandlestickChart() {
+      candlestickChart.innerHTML = ''; // Clear previous candles
+
+      for (let i = 0; i < 10; i++) {
+        const candlestick = document.createElement('div');
+        const candleBody = document.createElement('div');
+
+        const randomHeight = Math.floor(Math.random() * 50) + 50;
+        const candleTop = Math.floor(Math.random() * 20);
+        const isBullish = Math.random() > 0.5; // Random bullish or bearish
+
+        candlestick.className = 'candlestick';
+        candlestick.style.height = `${randomHeight + candleTop}px`;
+
+        candleBody.className = 'candle-body';
+        candleBody.style.height = `${randomHeight}px`;
+        candleBody.classList.add(isBullish ? 'bullish' : 'bearish');
+
+        candlestick.appendChild(candleBody);
+        candlestickChart.appendChild(candlestick);
+      }
+    }
+
+    generateButton.addEventListener("click", () => {
+      startRolling();
+      generateCandlestickChart();
+    });
+
+  </script>
+
+</body>
+</html>
